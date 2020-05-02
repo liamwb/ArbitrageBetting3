@@ -20,7 +20,7 @@ three_outcome_arbitrages = []
 
 # the combined market margin is the sum of the two implied probabilites.
 # if it's < 1, then there is an arbitrage opportunity
-def combinedMarketMargin(odds1: float, odds2: float, oddsDraw: float = 0) -> float:
+def combinedMarketMargin(odds1: float, odds2: float, oddsDraw: float = 0.0) -> float:
     """Returns a combined market margin, given a set of odds."""
     if oddsDraw:
         return (1 / odds1) + (1 / odds2) + (1 / oddsDraw)
@@ -46,6 +46,17 @@ def individualBet(investment: float, individual_implied_odds: float, combined_ma
     return (investment * individual_implied_odds) / combined_market_margins
 
 
+def printGames():
+    """prints all the games in a readable format"""
+
+    for game in two_outcome_games:
+        print(f'{game.team_a} vs {game.team_b} at {game.odds_a} to {game.odds_b} with {game.agency} ({game.sport}) \n')
+
+    for game in three_outcome_games:
+        print(f'{game.team_a} vs {game.team_b} at {game.odds_a} to {game.odds_b} ({game.odds_draw} to draw) '
+              f'with {game.agency}  ({game.sport})\n')
+
+
 # Classes
 
 class Game:
@@ -66,26 +77,40 @@ class Game:
         self.implied_odds_b = 1 / odds_b
         if odds_draw:
             self.implied_odds_draw = 1 / odds_draw
-        self.game_id = team_a + ' vs ' + team_b
+        self.gameID = f'{team_a} vs {team_b}'
 
 
-# class PossibleArbitrage:
-#     """
-#     A PossibleArbitrage object contains information about a single game from two betting agencies (order matters)
-#     """
-#
-#     def __init__(self, team_a: str, team_b: str, odds_a: float, odds_b: float, agency_a: str, agency_b: str, sport: str,
-#                  odds_draw: float = 0.0):
-#         self.team_a = team_a
-#         self.team_b = team_b
-#         self.odds_a = odds_a
-#         self.odds_b = odds_b
-#         self.agency_a = agency_a
-#         self.agency_b = agency_b
-#         self.sport = sport
-#         self.odds_draw = odds_draw
-#         self.game_id = team_a + ' vs ' + team_b
-#         self.CMM = combinedMarketMargin(odds_a, odds_b, odds_draw)
+class TwoOutcomeArbitrage:
+    """an arbitrage opportunity for a single game, with odds from two betting agencies"""
+
+    def __init__(self, team_a: str, team_b: str, odds_a: float, odds_b: float, agency_a: str, agency_b: str, sport: str):
+        self.team_a = team_a
+        self.team_b = team_b
+        self.odds_a = odds_a
+        self.odds_b = odds_b
+        self.agency_a = agency_a
+        self.agency_b = agency_b
+        self.sport = sport
+        self.gameID = f'{team_a} vs {team_b}'
+        self.CMM = combinedMarketMargin(odds_a, odds_b)
+
+
+class ThreeObjectArbitrage:
+    """an arbitrage opportunity for a single game, with odds from two or three betting agencies"""
+
+    def __init__(self, team_a: str, team_b: str, odds_a: float, odds_b: float, odds_draw: float, agency_a: str,
+                 agency_b: str, agency_draw: str, sport: str):
+        self.team_a = team_a
+        self.team_b = team_b
+        self.odds_a = odds_a
+        self.odds_b = odds_b
+        self.odds_draw = odds_draw
+        self.agency_a = agency_a
+        self.agency_b = agency_b
+        self.agency_draw = agency_draw
+        self.sport = sport
+        self.gameID = f'{team_a} vs {team_b}'
+        self.CMM = combinedMarketMargin(odds_a, odds_b, odds_draw)
 
 
 # Now get the odds for each event in each sport for each agency. 'Sport' being set to 'upcoming' means that the odds
@@ -112,13 +137,24 @@ for game in odds_json['data']:
             three_outcome_games.append(Game(betting_agency, team_a, team_b, odds_a, odds_b, sport, odds_draw))
 # two_outcome_games and three_outcome_games are now full of games
 
-def printGames():
-    """prints all the games in a readable format"""
+# fill the arbitrage arrays
+gameIDs = {game.gameID for game in two_outcome_games}
+for ID in gameIDs:
+    # all the games with the same gameID
+    relevant_games = list(filter(lambda x: x.gameID == ID, two_outcome_games))
+    # the best arbitrage opportunity will come from the greatest odds for each game
+    game_a = max(relevant_games, key=lambda x: x.odds_a)
+    game_b = max(relevant_games, key=lambda x: x.odds_b)
+    two_outcome_arbitrages.append(TwoOutcomeArbitrage(game_a.team_a, game_a.team_b, game_a.odds_a, game_b.odds_b,
+                                                      game_a.agency, game_b.agency, game_a.sport))
 
-    for game in two_outcome_games:
-        print(f'{game.team_a} vs {game.team_b} at {game.odds_a} to {game.odds_b} with {game.agency} ({game.sport}) \n')
 
-    for game in three_outcome_games:
-        print(f'{game.team_a} vs {game.team_b} at {game.odds_a} to {game.odds_b} ({game.odds_draw} to draw) '
-              f'with {game.agency}  ({game.sport})\n')
-
+gameIDs = {ID.gameID for ID in three_outcome_games}
+for ID in gameIDs:
+    relevant_games = list(filter(lambda x: x.gameID == ID, three_outcome_games))
+    game_a = max(relevant_games, key=lambda x: x.odds_a)
+    game_b = max(relevant_games, key=lambda x: x.odds_b)
+    game_draw = max(relevant_games, key=lambda x: x.odds_draw)
+    three_outcome_arbitrages.append(ThreeObjectArbitrage(game_a.team_a, game_a.team_b, game_a.odds_a, game_b.odds_b,
+                                                         game_draw.odds_draw, game_a.agency, game_b.agency,
+                                                         game_draw.agency, game_a.sport))
