@@ -57,6 +57,41 @@ def printGames():
               f'with {game.agency}  ({game.sport})\n')
 
 
+def printBestArbitrages():
+    print('------------Two outcome games------------ \n')
+    for arbitrage_object in two_outcome_arbitrages:
+        implied_odds_a = 1/arbitrage_object.odds_a
+        implied_odds_b = 1/arbitrage_object.odds_b
+        CMM = round(combinedMarketMargin(arbitrage_object.odds_a, arbitrage_object.odds_b), 2)
+        bet_a = round(individualBet(100, implied_odds_a, CMM), 2)
+        bet_b = round(individualBet(100, implied_odds_b, CMM), 2)
+        print(
+            f'For {arbitrage_object.gameID} ({arbitrage_object.sport}) \n'
+            f'a combined market margin of {CMM} can be achieved by: \n'
+            f'betting {bet_a}% on {arbitrage_object.team_a} with {arbitrage_object.agency_a}, \n'
+            f'and {bet_b}% on {arbitrage_object.team_b} with {arbitrage_object.agency_b}. \n'
+            f'This will yield a profit of {profit(100, CMM)}%. \n'
+        )
+    print('------------Three outcome games------------')
+    for arbitrage_object in three_outcome_arbitrages:
+        implied_odds_a = 1 / arbitrage_object.odds_a
+        implied_odds_b = 1 / arbitrage_object.odds_b
+        implied_odds_draw = 1 / arbitrage_object.odds_draw
+        CMM = round(combinedMarketMargin(arbitrage_object.odds_a, arbitrage_object.odds_b, arbitrage_object.odds_draw),
+                    2)
+        bet_a = round(individualBet(100, implied_odds_a, CMM), 2)
+        bet_b = round(individualBet(100, implied_odds_b, CMM), 2)
+        bet_draw = round(individualBet(100, implied_odds_draw, CMM), 2)
+        print(
+            f'For {arbitrage_object.gameID} ({arbitrage_object.sport}) \n'
+            f'a combined market margin of {CMM} can be achieved by: \n'
+            f'betting {bet_a}% on {arbitrage_object.team_a} with {arbitrage_object.agency_a}, \n'
+            f'{bet_b}% on {arbitrage_object.team_b} with {arbitrage_object.agency_b}, \n'
+            f'and {bet_draw}% on a draw with {arbitrage_object.agency_draw}. \n'
+            f'This will yield a profit of {profit(100, CMM)}%. \n'
+        )
+
+
 # Classes
 
 class Game:
@@ -73,10 +108,6 @@ class Game:
         self.odds_b = odds_b
         self.sport = sport
         self.odds_draw = odds_draw
-        self.implied_odds_a = 1 / odds_a
-        self.implied_odds_b = 1 / odds_b
-        if odds_draw:
-            self.implied_odds_draw = 1 / odds_draw
         self.gameID = f'{team_a} vs {team_b}'
 
 
@@ -92,7 +123,6 @@ class TwoOutcomeArbitrage:
         self.agency_b = agency_b
         self.sport = sport
         self.gameID = f'{team_a} vs {team_b}'
-        self.CMM = combinedMarketMargin(odds_a, odds_b)
 
 
 class ThreeObjectArbitrage:
@@ -110,7 +140,6 @@ class ThreeObjectArbitrage:
         self.agency_draw = agency_draw
         self.sport = sport
         self.gameID = f'{team_a} vs {team_b}'
-        self.CMM = combinedMarketMargin(odds_a, odds_b, odds_draw)
 
 
 # Now get the odds for each event in each sport for each agency. 'Sport' being set to 'upcoming' means that the odds
@@ -158,3 +187,7 @@ for ID in gameIDs:
     three_outcome_arbitrages.append(ThreeObjectArbitrage(game_a.team_a, game_a.team_b, game_a.odds_a, game_b.odds_b,
                                                          game_draw.odds_draw, game_a.agency, game_b.agency,
                                                          game_draw.agency, game_a.sport))
+
+# sort the lists so that the best opportunities are at the top
+two_outcome_arbitrages.sort(key=lambda x: combinedMarketMargin(x.odds_a, x.odds_b))
+three_outcome_arbitrages.sort(key=lambda x: combinedMarketMargin(x.odds_b, x.odds_b, x.odds_draw))
