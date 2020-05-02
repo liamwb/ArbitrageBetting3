@@ -191,3 +191,14 @@ for ID in gameIDs:
 # sort the lists so that the best opportunities are at the top
 two_outcome_arbitrages.sort(key=lambda x: combinedMarketMargin(x.odds_a, x.odds_b))
 three_outcome_arbitrages.sort(key=lambda x: combinedMarketMargin(x.odds_b, x.odds_b, x.odds_draw))
+
+
+# wait for instruction
+while True:
+    do = input('games or arbitrages')
+    if do == 'games':
+        printGames()
+    elif do == 'arbitrages':
+        printBestArbitrages()
+    else:
+        print('invalid input')
