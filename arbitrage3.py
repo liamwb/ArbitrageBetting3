@@ -55,37 +55,37 @@ class Game:
 
     def __init__(self, agency: str, team_a: str, team_b: str, odds_a: float, odds_b: float, sport: str,
                  odds_draw: float = 0.0):
-        self.bettingAgency = agency
-        self.teamA = team_a
-        self.teamB = team_b
-        self.oddsA = odds_a
-        self.oddsB = odds_b
+        self.agency = agency
+        self.team_a = team_a
+        self.team_b = team_b
+        self.odds_a = odds_a
+        self.odds_b = odds_b
         self.sport = sport
-        self.oddsDraw = odds_draw
-        self.impliedOddsA = 1 / odds_a
-        self.impliedOddsB = 1 / odds_b
+        self.odds_draw = odds_draw
+        self.implied_odds_a = 1 / odds_a
+        self.implied_odds_b = 1 / odds_b
         if odds_draw:
-            self.impliedOddsDraw = 1 / odds_draw
-        self.gameID = team_a + ' vs ' + team_b
+            self.implied_odds_draw = 1 / odds_draw
+        self.game_id = team_a + ' vs ' + team_b
 
 
-class PossibleArbitrage:
-    """
-    A PossibleArbitrage object contains information about a single game from two betting agencies (order matters)
-    """
-
-    def __init__(self, team_a: str, team_b: str, odds_a: float, odds_b: float, agency_a: str, agency_b: str, sport: str,
-                 odds_draw: float = 0.0):
-        self.teamA = team_a
-        self.teamB = team_b
-        self.oddsA = odds_a
-        self.oddsB = odds_b
-        self.agencyA = agency_a
-        self.agencyB = agency_b
-        self.sport = sport
-        self.oddsDraw = odds_draw
-        self.gameID = team_a + ' vs ' + team_b
-        self.CMM = combinedMarketMargin(odds_a, odds_b, odds_draw)
+# class PossibleArbitrage:
+#     """
+#     A PossibleArbitrage object contains information about a single game from two betting agencies (order matters)
+#     """
+#
+#     def __init__(self, team_a: str, team_b: str, odds_a: float, odds_b: float, agency_a: str, agency_b: str, sport: str,
+#                  odds_draw: float = 0.0):
+#         self.team_a = team_a
+#         self.team_b = team_b
+#         self.odds_a = odds_a
+#         self.odds_b = odds_b
+#         self.agency_a = agency_a
+#         self.agency_b = agency_b
+#         self.sport = sport
+#         self.odds_draw = odds_draw
+#         self.game_id = team_a + ' vs ' + team_b
+#         self.CMM = combinedMarketMargin(odds_a, odds_b, odds_draw)
 
 
 # Now get the odds for each event in each sport for each agency. 'Sport' being set to 'upcoming' means that the odds
@@ -110,3 +110,15 @@ for game in odds_json['data']:
         if len(site['odds']['h2h']) == 3:  # if there is a draw outcome
             odds_a, odds_b, odds_draw = site['odds']['h2h']
             three_outcome_games.append(Game(betting_agency, team_a, team_b, odds_a, odds_b, sport, odds_draw))
+# two_outcome_games and three_outcome_games are now full of games
+
+def printGames():
+    """prints all the games in a readable format"""
+
+    for game in two_outcome_games:
+        print(f'{game.team_a} vs {game.team_b} at {game.odds_a} to {game.odds_b} with {game.agency} ({game.sport}) \n')
+
+    for game in three_outcome_games:
+        print(f'{game.team_a} vs {game.team_b} at {game.odds_a} to {game.odds_b} ({game.odds_draw} to draw) '
+              f'with {game.agency}  ({game.sport})\n')
+
