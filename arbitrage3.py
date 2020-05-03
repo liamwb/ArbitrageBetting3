@@ -68,11 +68,11 @@ def printBestArbitrages():
         print(
             f'For {arbitrage_object.gameID} ({arbitrage_object.sport}) \n'
             f'a combined market margin of {CMM} can be achieved by: \n'
-            f'betting {bet_a}% on {arbitrage_object.team_a} with {arbitrage_object.agency_a}, \n'
-            f'and {bet_b}% on {arbitrage_object.team_b} with {arbitrage_object.agency_b}. \n'
-            f'This will yield a profit of {profit(100, CMM)}%. \n'
+            f'betting {bet_a}% on {arbitrage_object.team_a} with {arbitrage_object.agency_a} ({arbitrage_object.odds_a}),\n'
+            f'and {bet_b}% on {arbitrage_object.team_b} with {arbitrage_object.agency_b} ({arbitrage_object.odds_b}). \n'
+            f'This will yield a profit of {round(profit(100, CMM), 2)}%. \n'
         )
-    print('------------Three outcome games------------')
+    print('\n------------Three outcome games------------')
     for arbitrage_object in three_outcome_arbitrages:
         implied_odds_a = 1 / arbitrage_object.odds_a
         implied_odds_b = 1 / arbitrage_object.odds_b
@@ -85,10 +85,10 @@ def printBestArbitrages():
         print(
             f'For {arbitrage_object.gameID} ({arbitrage_object.sport}) \n'
             f'a combined market margin of {CMM} can be achieved by: \n'
-            f'betting {bet_a}% on {arbitrage_object.team_a} with {arbitrage_object.agency_a}, \n'
-            f'{bet_b}% on {arbitrage_object.team_b} with {arbitrage_object.agency_b}, \n'
-            f'and {bet_draw}% on a draw with {arbitrage_object.agency_draw}. \n'
-            f'This will yield a profit of {profit(100, CMM)}%. \n'
+            f'betting {bet_a}% on {arbitrage_object.team_a} with {arbitrage_object.agency_a} ({arbitrage_object.odds_a}), \n'
+            f'{bet_b}% on {arbitrage_object.team_b} with {arbitrage_object.agency_b} ({arbitrage_object.odds_b}), \n'
+            f'and {bet_draw}% on a draw with {arbitrage_object.agency_draw} ({arbitrage_object.agency_draw}). \n'
+            f'This will yield a profit of {round(profit(100, CMM), 2)}%. \n'
         )
 
 
@@ -125,7 +125,7 @@ class TwoOutcomeArbitrage:
         self.gameID = f'{team_a} vs {team_b}'
 
 
-class ThreeObjectArbitrage:
+class ThreeOutcomeArbitrage:
     """an arbitrage opportunity for a single game, with odds from two or three betting agencies"""
 
     def __init__(self, team_a: str, team_b: str, odds_a: float, odds_b: float, odds_draw: float, agency_a: str,
@@ -184,9 +184,9 @@ for ID in gameIDs:
     game_a = max(relevant_games, key=lambda x: x.odds_a)
     game_b = max(relevant_games, key=lambda x: x.odds_b)
     game_draw = max(relevant_games, key=lambda x: x.odds_draw)
-    three_outcome_arbitrages.append(ThreeObjectArbitrage(game_a.team_a, game_a.team_b, game_a.odds_a, game_b.odds_b,
-                                                         game_draw.odds_draw, game_a.agency, game_b.agency,
-                                                         game_draw.agency, game_a.sport))
+    three_outcome_arbitrages.append(ThreeOutcomeArbitrage(game_a.team_a, game_a.team_b, game_a.odds_a, game_b.odds_b,
+                                                          game_draw.odds_draw, game_a.agency, game_b.agency,
+                                                          game_draw.agency, game_a.sport))
 
 # sort the lists so that the best opportunities are at the top
 two_outcome_arbitrages.sort(key=lambda x: combinedMarketMargin(x.odds_a, x.odds_b))
@@ -195,7 +195,7 @@ three_outcome_arbitrages.sort(key=lambda x: combinedMarketMargin(x.odds_b, x.odd
 
 # wait for instruction
 while True:
-    do = input('games or arbitrages')
+    do = input('games or arbitrages? ')
     if do == 'games':
         printGames()
     elif do == 'arbitrages':
