@@ -8,8 +8,8 @@ import sys
 import requests
 
 # Keep the key for the-odds-api key secret
-api_key = open('api_key.txt').read()
-
+with open('api_key.txt') as f:
+    api_key = f.read()
 
 two_outcome_games = []
 three_outcome_games = []
