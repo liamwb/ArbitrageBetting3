@@ -173,7 +173,7 @@ def fillGames(odds_json):
     # put the data into the appropriate odds
     for game in odds_json['data']:
         sport = game['sport_nice']
-        team_a, team_b = game['teams']  # could have a third element if there's a draw possibility
+        team_a, team_b = game['teams']
         for site in game['sites']:
             betting_agency = site['site_nice']  # previous version used 'site_key', but the nice one is nicer
             if len(site['odds']['h2h']) == 2:  # if there is no draw outcome
