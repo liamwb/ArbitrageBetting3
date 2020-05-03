@@ -210,7 +210,7 @@ def fillArbitrages():
                                   game_draw.agency, game_a.sport))
 
 
-regions = input('Which regions would you like odds from? (uk, us, eu, au, all)')
+regions = input('Which regions would you like odds from? (uk, us, eu, au, all) ')
 all_regions = False
 if 'all' in regions:
     all_regions = True
