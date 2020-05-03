@@ -4,10 +4,12 @@ A third version of my arbitrage betting program, this time taking into account b
 """
 
 import json
+import sys
 import requests
 
 # Keep the key for the-odds-api key secret
 api_key = open('api_key.txt').read()
+
 
 two_outcome_games = []
 three_outcome_games = []
@@ -151,6 +153,12 @@ odds_response = requests.get('https://api.the-odds-api.com/v3/odds', params={
     'mkt': 'h2h'  # h2h | spreads | totals
 })
 odds_json = json.loads(odds_response.text)
+
+if not odds_json['success']:
+    print('There was a problem getting the odds')
+    sys.exit()
+else:
+    print('Got odds successfully')
 
 # put the data into the appropriate odds
 for game in odds_json['data']:
