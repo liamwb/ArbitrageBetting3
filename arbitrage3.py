@@ -62,8 +62,8 @@ def printGames():
 def printBestArbitrages():
     print('------------Two outcome games------------ \n')
     for arbitrage_object in two_outcome_arbitrages:
-        implied_odds_a = 1/arbitrage_object.odds_a
-        implied_odds_b = 1/arbitrage_object.odds_b
+        implied_odds_a = 1 / arbitrage_object.odds_a
+        implied_odds_b = 1 / arbitrage_object.odds_b
         CMM = round(combinedMarketMargin(arbitrage_object.odds_a, arbitrage_object.odds_b), 2)
         bet_a = round(individualBet(100, implied_odds_a, CMM), 2)
         bet_b = round(individualBet(100, implied_odds_b, CMM), 2)
@@ -116,7 +116,8 @@ class Game:
 class TwoOutcomeArbitrage:
     """an arbitrage opportunity for a single game, with odds from two betting agencies"""
 
-    def __init__(self, team_a: str, team_b: str, odds_a: float, odds_b: float, agency_a: str, agency_b: str, sport: str):
+    def __init__(self, team_a: str, team_b: str, odds_a: float, odds_b: float, agency_a: str, agency_b: str,
+                 sport: str):
         self.team_a = team_a
         self.team_b = team_b
         self.odds_a = odds_a
@@ -144,62 +145,88 @@ class ThreeOutcomeArbitrage:
         self.gameID = f'{team_a} vs {team_b}'
 
 
-# Now get the odds for each event in each sport for each agency. 'Sport' being set to 'upcoming' means that the odds
-# for all upcoming games will be returned
-odds_response = requests.get('https://api.the-odds-api.com/v3/odds', params={
-    'api_key': api_key,
-    'sport': 'upcoming',
-    'region': 'au',  # uk | us | eu | au
-    'mkt': 'h2h'  # h2h | spreads | totals
-})
-odds_json = json.loads(odds_response.text)
-
-if not odds_json['success']:
-    print('There was a problem getting the odds')
-    sys.exit()
-else:
-    print('Got odds successfully')
-
-# put the data into the appropriate odds
-for game in odds_json['data']:
-    sport = game['sport_nice']
-    team_a, team_b = game['teams']  # could have a third element if there's a draw possibility
-    for site in game['sites']:
-        betting_agency = site['site_nice']  # previous version used 'site_key', but the nice one is nicer
-        if len(site['odds']['h2h']) == 2:  # if there is no draw outcome
-            odds_a, odds_b = site['odds']['h2h']
-            two_outcome_games.append(Game(betting_agency, team_a, team_b, odds_a, odds_b, sport))
-        if len(site['odds']['h2h']) == 3:  # if there is a draw outcome
-            odds_a, odds_b, odds_draw = site['odds']['h2h']
-            three_outcome_games.append(Game(betting_agency, team_a, team_b, odds_a, odds_b, sport, odds_draw))
-# two_outcome_games and three_outcome_games are now full of games
-
-# fill the arbitrage arrays
-gameIDs = {game.gameID for game in two_outcome_games}
-for ID in gameIDs:
-    # all the games with the same gameID
-    relevant_games = list(filter(lambda x: x.gameID == ID, two_outcome_games))
-    # the best arbitrage opportunity will come from the greatest odds for each game
-    game_a = max(relevant_games, key=lambda x: x.odds_a)
-    game_b = max(relevant_games, key=lambda x: x.odds_b)
-    two_outcome_arbitrages.append(TwoOutcomeArbitrage(game_a.team_a, game_a.team_b, game_a.odds_a, game_b.odds_b,
-                                                      game_a.agency, game_b.agency, game_a.sport))
+# Function for doing things
 
 
-gameIDs = {ID.gameID for ID in three_outcome_games}
-for ID in gameIDs:
-    relevant_games = list(filter(lambda x: x.gameID == ID, three_outcome_games))
-    game_a = max(relevant_games, key=lambda x: x.odds_a)
-    game_b = max(relevant_games, key=lambda x: x.odds_b)
-    game_draw = max(relevant_games, key=lambda x: x.odds_draw)
-    three_outcome_arbitrages.append(ThreeOutcomeArbitrage(game_a.team_a, game_a.team_b, game_a.odds_a, game_b.odds_b,
-                                                          game_draw.odds_draw, game_a.agency, game_b.agency,
-                                                          game_draw.agency, game_a.sport))
+def getOddsJson(region: str):
+    """Gets all the odds available from region"""
+    # Get the odds for each event in each sport for each agency. 'Sport' being set to 'upcoming' means that the odds
+    # for all upcoming games will be returned
+    odds_response = requests.get('https://api.the-odds-api.com/v3/odds', params={
+        'api_key': api_key,
+        'sport': 'upcoming',
+        'region': region,  # uk | us | eu | au
+        'mkt': 'h2h'  # h2h | spreads | totals
+    })
+    odds_json = json.loads(odds_response.text)
 
-# sort the lists so that the best opportunities are at the top
+    if not odds_json['success']:
+        print(f'There was a problem getting the odds for {region}')
+        sys.exit()
+    else:
+        print(f'Got odds for {region} successfully')
+    return odds_json
+
+
+def fillGames(odds_json):
+    """Fills the games arrays with the data from odds_json"""
+    # put the data into the appropriate odds
+    for game in odds_json['data']:
+        sport = game['sport_nice']
+        team_a, team_b = game['teams']  # could have a third element if there's a draw possibility
+        for site in game['sites']:
+            betting_agency = site['site_nice']  # previous version used 'site_key', but the nice one is nicer
+            if len(site['odds']['h2h']) == 2:  # if there is no draw outcome
+                odds_a, odds_b = site['odds']['h2h']
+                two_outcome_games.append(Game(betting_agency, team_a, team_b, odds_a, odds_b, sport))
+            if len(site['odds']['h2h']) == 3:  # if there is a draw outcome
+                odds_a, odds_b, odds_draw = site['odds']['h2h']
+                three_outcome_games.append(Game(betting_agency, team_a, team_b, odds_a, odds_b, sport, odds_draw))
+    # two_outcome_games and three_outcome_games are now full of games
+
+
+def fillArbitrages():
+    """Fills the arbitrage arrays with arbitrage opportunities given the info in the games arrays"""
+    # fill the arbitrage arrays
+    gameIDs = {game.gameID for game in two_outcome_games}
+    for ID in gameIDs:
+        # all the games with the same gameID
+        relevant_games = list(filter(lambda x: x.gameID == ID, two_outcome_games))
+        # the best arbitrage opportunity will come from the greatest odds for each game
+        game_a = max(relevant_games, key=lambda x: x.odds_a)
+        game_b = max(relevant_games, key=lambda x: x.odds_b)
+        two_outcome_arbitrages.append(TwoOutcomeArbitrage(game_a.team_a, game_a.team_b, game_a.odds_a, game_b.odds_b,
+                                                          game_a.agency, game_b.agency, game_a.sport))
+
+    gameIDs = {ID.gameID for ID in three_outcome_games}
+    for ID in gameIDs:
+        relevant_games = list(filter(lambda x: x.gameID == ID, three_outcome_games))
+        game_a = max(relevant_games, key=lambda x: x.odds_a)
+        game_b = max(relevant_games, key=lambda x: x.odds_b)
+        game_draw = max(relevant_games, key=lambda x: x.odds_draw)
+        three_outcome_arbitrages.append(
+            ThreeOutcomeArbitrage(game_a.team_a, game_a.team_b, game_a.odds_a, game_b.odds_b,
+                                  game_draw.odds_draw, game_a.agency, game_b.agency,
+                                  game_draw.agency, game_a.sport))
+
+
+regions = input('Which regions would you like odds from? (uk, us, eu, au, all)')
+all_regions = False
+if 'all' in regions:
+    all_regions = True
+if 'uk' in regions or all_regions:
+    fillGames(getOddsJson('uk'))
+if 'us' in regions or all_regions:
+    fillGames(getOddsJson('us'))
+if 'eu' in regions or all_regions:
+    fillGames(getOddsJson('eu'))
+if 'au' in regions or all_regions:
+    fillGames(getOddsJson('au'))
+
+fillArbitrages()
+
 two_outcome_arbitrages.sort(key=lambda x: combinedMarketMargin(x.odds_a, x.odds_b))
-three_outcome_arbitrages.sort(key=lambda x: combinedMarketMargin(x.odds_b, x.odds_b, x.odds_draw))
-
+three_outcome_arbitrages.sort(key=lambda x: combinedMarketMargin(x.odds_a, x.odds_b, x.odds_draw))
 
 # wait for instruction
 while True:
