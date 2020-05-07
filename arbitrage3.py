@@ -210,30 +210,38 @@ def fillArbitrages():
                                   game_draw.agency, game_a.sport))
 
 
-regions = input('Which regions would you like odds from? (uk, us, eu, au, all) ')
-all_regions = False
-if 'all' in regions:
-    all_regions = True
-if 'uk' in regions or all_regions:
-    fillGames(getOddsJson('uk'))
-if 'us' in regions or all_regions:
-    fillGames(getOddsJson('us'))
-if 'eu' in regions or all_regions:
-    fillGames(getOddsJson('eu'))
-if 'au' in regions or all_regions:
-    fillGames(getOddsJson('au'))
+def pickRegion():
+    regions = input('Which regions would you like odds from? (uk, us, eu, au, all) ')
+    all_regions = False
+    if 'all' in regions:
+        all_regions = True
+    if 'uk' in regions or all_regions:
+        fillGames(getOddsJson('uk'))
+    if 'us' in regions or all_regions:
+        fillGames(getOddsJson('us'))
+    if 'eu' in regions or all_regions:
+        fillGames(getOddsJson('eu'))
+    if 'au' in regions or all_regions:
+        fillGames(getOddsJson('au'))
 
-fillArbitrages()
+    fillArbitrages()
 
-two_outcome_arbitrages.sort(key=lambda x: combinedMarketMargin(x.odds_a, x.odds_b))
-three_outcome_arbitrages.sort(key=lambda x: combinedMarketMargin(x.odds_a, x.odds_b, x.odds_draw))
+    two_outcome_arbitrages.sort(key=lambda x: combinedMarketMargin(x.odds_a, x.odds_b))
+    three_outcome_arbitrages.sort(key=lambda x: combinedMarketMargin(x.odds_a, x.odds_b, x.odds_draw))
+
+pickRegion()
 
 # wait for instruction
 while True:
     do = input('games or arbitrages? ')
-    if do == 'games':
+    if 'games' in do.strip().lower():
         printGames()
-    elif do == 'arbitrages':
+    elif 'arbitrages' in do.strip().lower():
         printBestArbitrages()
+    elif 'back' in do.strip().lower():
+        two_outcome_arbitrages, three_outcome_arbitrages, two_outcome_games, three_outcome_arbitrages = [], [], [], []
+        pickRegion()
+    elif 'done' in do.strip().lower():
+        sys.exit()
     else:
         print('invalid input')
