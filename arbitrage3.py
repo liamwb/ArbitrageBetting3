@@ -20,11 +20,12 @@ arbitrages = []
 
 # the combined market margin is the sum of the two implied probabilites.
 # if it's < 1, then there is an arbitrage opportunity
-def combinedMarketMargin(odds1: float, odds2: float, oddsDraw: float = 0.0) -> float:
+def combinedMarketMargin(*odds: float):
     """Returns a combined market margin, given a set of odds."""
-    if oddsDraw:
-        return (1 / odds1) + (1 / odds2) + (1 / oddsDraw)
-    return (1 / odds1) + (1 / odds2)
+    margin = 0
+    for odd in odds:
+        margin += 1/odd
+    return margin
 
 
 # If there is an arbitrage opportunity, then to calculate the profit for a
@@ -58,10 +59,8 @@ def printGames():
 
 
 def printBestArbitrages():
-    print('------------Two outcome games------------ \n')
-    for arbitrage_object in two_outcome_arbitrages:
-        implied_odds_a = 1 / arbitrage_object.odds_a
-        implied_odds_b = 1 / arbitrage_object.odds_b
+
+    for arbitrage_object in arbitrages:
         CMM = round(combinedMarketMargin(arbitrage_object.odds_a, arbitrage_object.odds_b), 2)
         bet_a = round(individualBet(100, implied_odds_a, CMM), 2)
         bet_b = round(individualBet(100, implied_odds_b, CMM), 2)
@@ -72,24 +71,7 @@ def printBestArbitrages():
             f'and {bet_b}% on {arbitrage_object.team_b} with {arbitrage_object.agency_b} ({arbitrage_object.odds_b}). \n'
             f'This will yield a profit of {round(profit(100, CMM), 2)}%. \n'
         )
-    print('\n------------Three outcome games------------')
-    for arbitrage_object in three_outcome_arbitrages:
-        implied_odds_a = 1 / arbitrage_object.odds_a
-        implied_odds_b = 1 / arbitrage_object.odds_b
-        implied_odds_draw = 1 / arbitrage_object.odds_draw
-        CMM = round(combinedMarketMargin(arbitrage_object.odds_a, arbitrage_object.odds_b, arbitrage_object.odds_draw),
-                    2)
-        bet_a = round(individualBet(100, implied_odds_a, CMM), 2)
-        bet_b = round(individualBet(100, implied_odds_b, CMM), 2)
-        bet_draw = round(individualBet(100, implied_odds_draw, CMM), 2)
-        print(
-            f'For {arbitrage_object.game_id} ({arbitrage_object.sport}) \n'
-            f'a combined market margin of {CMM} can be achieved by: \n'
-            f'betting {bet_a}% on {arbitrage_object.team_a} with {arbitrage_object.agency_a} ({arbitrage_object.odds_a}), \n'
-            f'{bet_b}% on {arbitrage_object.team_b} with {arbitrage_object.agency_b} ({arbitrage_object.odds_b}), \n'
-            f'and {bet_draw}% on a draw with {arbitrage_object.agency_draw} ({arbitrage_object.agency_draw}). \n'
-            f'This will yield a profit of {round(profit(100, CMM), 2)}%. \n'
-        )
+
 
 
 # Classes
@@ -116,7 +98,7 @@ class Arbitrage:
     teams, odds and agencies should be in the form 'team_0', 'team_1', 'team_2', etc.
     """
 
-    def __init__(self, teams: dict, odds: dict, agencies:dict, sport):
+    def __init__(self, teams: dict, odds: dict, agencies: dict, sport):
         self.teams = teams
         self.odds = odds
         self.agencies = agencies
@@ -124,8 +106,7 @@ class Arbitrage:
         self.game_id = teams['team_0'] + ' vs ' + teams['team_1']
 
 
-
-# Function for doing things
+# Functions for doing things
 
 
 def getOddsJson(region: str):
@@ -183,7 +164,6 @@ def fillArbitrages():
 
         arbitrages.append(Arbitrage(teams, odds, agencies, sport))
 
-        
 # def pickRegion():
 #     regions = input('Which regions would you like odds from? (uk, us, eu, au, all) ')
 #     all_regions = False
@@ -202,5 +182,3 @@ def fillArbitrages():
 #
 #     two_outcome_arbitrages.sort(key=lambda x: combinedMarketMargin(x.odds_a, x.odds_b))
 #     three_outcome_arbitrages.sort(key=lambda x: combinedMarketMargin(x.odds_a, x.odds_b, x.odds_draw))
-
-
