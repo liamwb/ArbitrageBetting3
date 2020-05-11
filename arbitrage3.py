@@ -41,21 +41,31 @@ def profit(investment: float, combined_market_margin: float) -> float:
 #
 # Individual bets = (Investment x Individual implied odds) / combined market margin
 def individualBet(investment: float, individual_implied_odds: float, combined_market_margins: float) -> float:
-    """
-    Returns the amount to bet on one outcome in an arbitrage opportunity
-    """
+    """Returns the amount to bet on one outcome in an arbitrage opportunity"""
     return (investment * individual_implied_odds) / combined_market_margins
 
 
 def printGames():
     """prints all the games in a readable format"""
 
-    for game in two_outcome_games:
-        print(f'{game.team_a} vs {game.team_b} at {game.odds_a} to {game.odds_b} with {game.agency} ({game.sport}) \n')
+    for game in games:
+        if len(game.teams) == 2:
+            if len(game.odds) == 2:
+                print(f'{game.teams["team_0"]} vs {game.teams["team_1"]} at {game.odds["odds_0"]} ' +
+                      f'to {game.odds["odds_1"]} with {game.agency} ({game.sport}) \n')
 
-    for game in three_outcome_games:
-        print(f'{game.team_a} vs {game.team_b} at {game.odds_a} to {game.odds_b} ({game.odds_draw} to draw) '
-              f'with {game.agency}  ({game.sport})\n')
+            elif len(game.odds) == 3:
+                print(f'{game.teams["team_0"]} vs {game.teams["team_1"]} at {game.odds["odds_0"]} to ' +
+                      f'{game.odds["odds_1"]} ({game.odds["odds_2"]} to draw) with {game.agency} ({game.sport}) \n')
+
+
+
+    # for game in two_outcome_games:
+    #     print(f'{game.team_a} vs {game.team_b} at {game.odds_a} to {game.odds_b} with {game.agency} ({game.sport}) \n')
+    #
+    # for game in three_outcome_games:
+    #     print(f'{game.team_a} vs {game.team_b} at {game.odds_a} to {game.odds_b} ({game.odds_draw} to draw) '
+    #           f'with {game.agency}  ({game.sport})\n')
 
 
 def printBestArbitrages():
