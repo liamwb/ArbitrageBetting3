@@ -59,15 +59,6 @@ def printGames():
                       f'{game.odds["odds_1"]} ({game.odds["odds_2"]} to draw) with {game.agency} ({game.sport}) \n')
 
 
-
-    # for game in two_outcome_games:
-    #     print(f'{game.team_a} vs {game.team_b} at {game.odds_a} to {game.odds_b} with {game.agency} ({game.sport}) \n')
-    #
-    # for game in three_outcome_games:
-    #     print(f'{game.team_a} vs {game.team_b} at {game.odds_a} to {game.odds_b} ({game.odds_draw} to draw) '
-    #           f'with {game.agency}  ({game.sport})\n')
-
-
 def printBestArbitrages():
 
     for arbitrage_object in arbitrages:
