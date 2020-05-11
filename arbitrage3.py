@@ -11,10 +11,8 @@ import requests
 with open('api_key.txt') as f:
     api_key = f.read()
 
-two_outcome_games = []
-three_outcome_games = []
-two_outcome_arbitrages = []
-three_outcome_arbitrages = []
+games = []
+arbitrages = []
 
 
 # General purpose functions for arbitrage calculations
@@ -99,50 +97,32 @@ def printBestArbitrages():
 class Game:
     """
      A Game object contains information about a single game from a single betting agency
+
+     teams and odds should be in the format team_1, team_2, team_3, etc.
+     odds_1 is either the odds of team_2 winning, or the odds of a draw if there is no such team
     """
 
-    def __init__(self, agency: str, team_a: str, team_b: str, odds_a: float, odds_b: float, sport: str,
-                 odds_draw: float = 0.0):
+    def __init__(self, agency: str, teams: dict, odds: dict, sport: str):
         self.agency = agency
-        self.team_a = team_a
-        self.team_b = team_b
-        self.odds_a = odds_a
-        self.odds_b = odds_b
         self.sport = sport
-        self.odds_draw = odds_draw
-        self.gameID = f'{team_a} vs {team_b}'
+        self.teams = teams
+        self.odds = odds
+        self.game_id = teams['team_1'] + ' vs ' + self.teams['team_2']
 
 
-class TwoOutcomeArbitrage:
-    """an arbitrage opportunity for a single game, with odds from two betting agencies"""
+class Arbitrage:
+    """
+    an arbitrage opportunity for a single game, with odds from two or more betting agencies
+    teams, odds and agencies should be in the form 'team_1', 'team_2', etc.
+    """
 
-    def __init__(self, team_a: str, team_b: str, odds_a: float, odds_b: float, agency_a: str, agency_b: str,
-                 sport: str):
-        self.team_a = team_a
-        self.team_b = team_b
-        self.odds_a = odds_a
-        self.odds_b = odds_b
-        self.agency_a = agency_a
-        self.agency_b = agency_b
+    def __init__(self, teams: dict, odds: dict, agencies:dict, sport):
+        self.teams = teams
+        self.odds = odds
+        self.agencies = agencies
         self.sport = sport
-        self.gameID = f'{team_a} vs {team_b}'
+        self.gameID = teams['team_a'] + ' vs ' + teams['team_b']
 
-
-class ThreeOutcomeArbitrage:
-    """an arbitrage opportunity for a single game, with odds from two or three betting agencies"""
-
-    def __init__(self, team_a: str, team_b: str, odds_a: float, odds_b: float, odds_draw: float, agency_a: str,
-                 agency_b: str, agency_draw: str, sport: str):
-        self.team_a = team_a
-        self.team_b = team_b
-        self.odds_a = odds_a
-        self.odds_b = odds_b
-        self.odds_draw = odds_draw
-        self.agency_a = agency_a
-        self.agency_b = agency_b
-        self.agency_draw = agency_draw
-        self.sport = sport
-        self.gameID = f'{team_a} vs {team_b}'
 
 
 # Function for doing things
@@ -173,15 +153,15 @@ def fillGames(odds_json):
     # put the data into the appropriate odds
     for game in odds_json['data']:
         sport = game['sport_nice']
-        team_a, team_b = game['teams']
+        team_1, team_2 = game['teams']
+        teams = {'team_1': team_1, 'team_2': team_2}
         for site in game['sites']:
             betting_agency = site['site_nice']  # previous version used 'site_key', but the nice one is nicer
-            if len(site['odds']['h2h']) == 2:  # if there is no draw outcome
-                odds_a, odds_b = site['odds']['h2h']
-                two_outcome_games.append(Game(betting_agency, team_a, team_b, odds_a, odds_b, sport))
-            if len(site['odds']['h2h']) == 3:  # if there is a draw outcome
-                odds_a, odds_b, odds_draw = site['odds']['h2h']
-                three_outcome_games.append(Game(betting_agency, team_a, team_b, odds_a, odds_b, sport, odds_draw))
+            odds = {}
+            for i, o in enumerate(site['odds']['h2h']):
+                odds.update({f'team_{i+1}': o})
+            games.append(Game(betting_agency, teams, odds, sport))
+
     # two_outcome_games and three_outcome_games are now full of games
 
 
@@ -210,38 +190,23 @@ def fillArbitrages():
                                   game_draw.agency, game_a.sport))
 
 
-def pickRegion():
-    regions = input('Which regions would you like odds from? (uk, us, eu, au, all) ')
-    all_regions = False
-    if 'all' in regions:
-        all_regions = True
-    if 'uk' in regions or all_regions:
-        fillGames(getOddsJson('uk'))
-    if 'us' in regions or all_regions:
-        fillGames(getOddsJson('us'))
-    if 'eu' in regions or all_regions:
-        fillGames(getOddsJson('eu'))
-    if 'au' in regions or all_regions:
-        fillGames(getOddsJson('au'))
+# def pickRegion():
+#     regions = input('Which regions would you like odds from? (uk, us, eu, au, all) ')
+#     all_regions = False
+#     if 'all' in regions:
+#         all_regions = True
+#     if 'uk' in regions or all_regions:
+#         fillGames(getOddsJson('uk'))
+#     if 'us' in regions or all_regions:
+#         fillGames(getOddsJson('us'))
+#     if 'eu' in regions or all_regions:
+#         fillGames(getOddsJson('eu'))
+#     if 'au' in regions or all_regions:
+#         fillGames(getOddsJson('au'))
+#
+#     fillArbitrages()
+#
+#     two_outcome_arbitrages.sort(key=lambda x: combinedMarketMargin(x.odds_a, x.odds_b))
+#     three_outcome_arbitrages.sort(key=lambda x: combinedMarketMargin(x.odds_a, x.odds_b, x.odds_draw))
 
-    fillArbitrages()
 
-    two_outcome_arbitrages.sort(key=lambda x: combinedMarketMargin(x.odds_a, x.odds_b))
-    three_outcome_arbitrages.sort(key=lambda x: combinedMarketMargin(x.odds_a, x.odds_b, x.odds_draw))
-
-pickRegion()
-
-# wait for instruction
-while True:
-    do = input('games or arbitrages? ')
-    if 'games' in do.strip().lower():
-        printGames()
-    elif 'arbitrages' in do.strip().lower():
-        printBestArbitrages()
-    elif 'back' in do.strip().lower():
-        two_outcome_arbitrages, three_outcome_arbitrages, two_outcome_games, three_outcome_arbitrages = [], [], [], []
-        pickRegion()
-    elif 'done' in do.strip().lower():
-        sys.exit()
-    else:
-        print('invalid input')
