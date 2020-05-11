@@ -66,7 +66,7 @@ def printBestArbitrages():
         bet_a = round(individualBet(100, implied_odds_a, CMM), 2)
         bet_b = round(individualBet(100, implied_odds_b, CMM), 2)
         print(
-            f'For {arbitrage_object.gameID} ({arbitrage_object.sport}) \n'
+            f'For {arbitrage_object.game_id} ({arbitrage_object.sport}) \n'
             f'a combined market margin of {CMM} can be achieved by: \n'
             f'betting {bet_a}% on {arbitrage_object.team_a} with {arbitrage_object.agency_a} ({arbitrage_object.odds_a}),\n'
             f'and {bet_b}% on {arbitrage_object.team_b} with {arbitrage_object.agency_b} ({arbitrage_object.odds_b}). \n'
@@ -83,7 +83,7 @@ def printBestArbitrages():
         bet_b = round(individualBet(100, implied_odds_b, CMM), 2)
         bet_draw = round(individualBet(100, implied_odds_draw, CMM), 2)
         print(
-            f'For {arbitrage_object.gameID} ({arbitrage_object.sport}) \n'
+            f'For {arbitrage_object.game_id} ({arbitrage_object.sport}) \n'
             f'a combined market margin of {CMM} can be achieved by: \n'
             f'betting {bet_a}% on {arbitrage_object.team_a} with {arbitrage_object.agency_a} ({arbitrage_object.odds_a}), \n'
             f'{bet_b}% on {arbitrage_object.team_b} with {arbitrage_object.agency_b} ({arbitrage_object.odds_b}), \n'
@@ -98,7 +98,7 @@ class Game:
     """
      A Game object contains information about a single game from a single betting agency
 
-     teams and odds should be in the format team_1, team_2, team_3, etc.
+     teams and odds should be in the format team_0, team_1, team_2, team_3, etc.
      odds_1 is either the odds of team_2 winning, or the odds of a draw if there is no such team
     """
 
@@ -107,13 +107,13 @@ class Game:
         self.sport = sport
         self.teams = teams
         self.odds = odds
-        self.game_id = teams['team_1'] + ' vs ' + self.teams['team_2']
+        self.game_id = teams['team_0'] + ' vs ' + self.teams['team_1']
 
 
 class Arbitrage:
     """
     an arbitrage opportunity for a single game, with odds from two or more betting agencies
-    teams, odds and agencies should be in the form 'team_1', 'team_2', etc.
+    teams, odds and agencies should be in the form 'team_0', 'team_1', 'team_2', etc.
     """
 
     def __init__(self, teams: dict, odds: dict, agencies:dict, sport):
@@ -121,7 +121,7 @@ class Arbitrage:
         self.odds = odds
         self.agencies = agencies
         self.sport = sport
-        self.gameID = teams['team_a'] + ' vs ' + teams['team_b']
+        self.game_id = teams['team_0'] + ' vs ' + teams['team_1']
 
 
 
@@ -153,40 +153,37 @@ def fillGames(odds_json):
     # put the data into the appropriate odds
     for game in odds_json['data']:
         sport = game['sport_nice']
-        teams = {f'team_{i+1}': t for i, t, in enumerate(game['teams'])}  # formatting for 'team_n': team_n
+        teams = {f'team_{i}': t for i, t, in enumerate(game['teams'])}  # formatting for 'team_n': team_n
         for site in game['sites']:
             betting_agency = site['site_nice']  # previous version used 'site_key', but the nice one is nicer
             # the odds are stored in site['odds']['h2h']
-            odds = {f'odds_{i+1}': o for i, o in enumerate(site['odds']['h2h'])}
+            odds = {f'odds_{i}': o for i, o in enumerate(site['odds']['h2h'])}
             games.append(Game(betting_agency, teams, odds, sport))
     # games is now full of games
 
 
 def fillArbitrages():
     """Fills the arbitrage arrays with arbitrage opportunities given the info in the games arrays"""
-    # fill the arbitrage arrays
-    gameIDs = {game.gameID for game in two_outcome_games}
-    for ID in gameIDs:
-        # all the games with the same gameID
-        relevant_games = list(filter(lambda x: x.gameID == ID, two_outcome_games))
-        # the best arbitrage opportunity will come from the greatest odds for each game
-        game_a = max(relevant_games, key=lambda x: x.odds_a)
-        game_b = max(relevant_games, key=lambda x: x.odds_b)
-        two_outcome_arbitrages.append(TwoOutcomeArbitrage(game_a.team_a, game_a.team_b, game_a.odds_a, game_b.odds_b,
-                                                          game_a.agency, game_b.agency, game_a.sport))
+    # fill the arbitrages array
+    game_ids = {game.game_id for game in games}
+    for ID in game_ids:
+        # all the games with the same game_id
+        relevant_games = list(filter(lambda x: x.game_id == ID, games))
+        # the best arbitrage opportunity will come from the greatest odds for each outcome
+        best_games = {}
+        for i in range(len(relevant_games[0].odds)):  # for each outcome, find the game object with the highest odds
+            game_i = max(relevant_games, key=lambda x: x.odds[f'odds_{i}'])
+            best_games.update({f'game_{i}': game_i})
 
-    gameIDs = {ID.gameID for ID in three_outcome_games}
-    for ID in gameIDs:
-        relevant_games = list(filter(lambda x: x.gameID == ID, three_outcome_games))
-        game_a = max(relevant_games, key=lambda x: x.odds_a)
-        game_b = max(relevant_games, key=lambda x: x.odds_b)
-        game_draw = max(relevant_games, key=lambda x: x.odds_draw)
-        three_outcome_arbitrages.append(
-            ThreeOutcomeArbitrage(game_a.team_a, game_a.team_b, game_a.odds_a, game_b.odds_b,
-                                  game_draw.odds_draw, game_a.agency, game_b.agency,
-                                  game_draw.agency, game_a.sport))
+        teams, sport = best_games['game_0'].teams, best_games['game_0'].sport
+        odds, agencies = {}, {}
+        for i, game in enumerate(best_games.values()):
+            odds.update({f'odds_{i}': game.odds[f'odds_{i}']})
+            agencies.update({f'agency_{i}': game.agency})
 
+        arbitrages.append(Arbitrage(teams, odds, agencies, sport))
 
+        
 # def pickRegion():
 #     regions = input('Which regions would you like odds from? (uk, us, eu, au, all) ')
 #     all_regions = False
