@@ -153,16 +153,13 @@ def fillGames(odds_json):
     # put the data into the appropriate odds
     for game in odds_json['data']:
         sport = game['sport_nice']
-        team_1, team_2 = game['teams']
-        teams = {'team_1': team_1, 'team_2': team_2}
+        teams = {f'team_{i+1}': t for i, t, in enumerate(game['teams'])}  # formatting for 'team_n': team_n
         for site in game['sites']:
             betting_agency = site['site_nice']  # previous version used 'site_key', but the nice one is nicer
-            odds = {}
-            for i, o in enumerate(site['odds']['h2h']):
-                odds.update({f'team_{i+1}': o})
+            # the odds are stored in site['odds']['h2h']
+            odds = {f'odds_{i+1}': o for i, o in enumerate(site['odds']['h2h'])}
             games.append(Game(betting_agency, teams, odds, sport))
-
-    # two_outcome_games and three_outcome_games are now full of games
+    # games is now full of games
 
 
 def fillArbitrages():
