@@ -20,7 +20,7 @@ arbitrages = []
 
 # the combined market margin is the sum of the two implied probabilites.
 # if it's < 1, then there is an arbitrage opportunity
-def combinedMarketMargin(*odds: float):
+def combinedMarketMargin(odds: tuple):
     """Returns a combined market margin, given a set of odds."""
     margin = 0
     for odd in odds:
@@ -49,12 +49,12 @@ def printGames():
     """prints all the games in a readable format"""
 
     for game in games:
-        if len(game.teams) == 2:
+        if len(game.teams) == 2 and len(game.odds) == 2:  # two teams, no draw outcome
             if len(game.odds) == 2:
                 print(f'{game.teams["team_0"]} vs {game.teams["team_1"]} at {game.odds["odds_0"]} ' +
                       f'to {game.odds["odds_1"]} with {game.agency} ({game.sport}) \n')
 
-            elif len(game.odds) == 3:
+            elif len(game.teams) == 2 and len(game.odds) == 3:  # two teams with odds for a draw
                 print(f'{game.teams["team_0"]} vs {game.teams["team_1"]} at {game.odds["odds_0"]} to ' +
                       f'{game.odds["odds_1"]} ({game.odds["odds_2"]} to draw) with {game.agency} ({game.sport}) \n')
 
@@ -62,17 +62,35 @@ def printGames():
 def printBestArbitrages():
 
     for arbitrage_object in arbitrages:
-        CMM = round(combinedMarketMargin(arbitrage_object.odds_a, arbitrage_object.odds_b), 2)
-        bet_a = round(individualBet(100, implied_odds_a, CMM), 2)
-        bet_b = round(individualBet(100, implied_odds_b, CMM), 2)
-        print(
-            f'For {arbitrage_object.game_id} ({arbitrage_object.sport}) \n'
-            f'a combined market margin of {CMM} can be achieved by: \n'
-            f'betting {bet_a}% on {arbitrage_object.team_a} with {arbitrage_object.agency_a} ({arbitrage_object.odds_a}),\n'
-            f'and {bet_b}% on {arbitrage_object.team_b} with {arbitrage_object.agency_b} ({arbitrage_object.odds_b}). \n'
-            f'This will yield a profit of {round(profit(100, CMM), 2)}%. \n'
-        )
+        CMM = combinedMarketMargin((odd for odd in arbitrage_object.odds.values()))
+        bet_0 = round(individualBet(100, arbitrage_object.odds['odds_0'], CMM), 2)
+        bet_1 = round(individualBet(100, arbitrage_object.odds['odds_1'], CMM), 2)
+        team_0, team_1 = arbitrage_object.teams['team_0'], arbitrage_object.teams['team_1']
+        agency_0, agency_1 = arbitrage_object.agencies['agency_0'], arbitrage_object.agencies['agency_0']
+        odds_0, odds_1 = arbitrage_object.odds['odds_0'], arbitrage_object.odds['odds_1']
+        round_CMM = round(CMM, 2)
 
+        if len(arbitrage_object.teams) == 2 and len(arbitrage_object.odds) == 2:  # two teams, no draw outcome
+            print(
+                f'For {arbitrage_object.game_id} ({arbitrage_object.sport}) \n'
+                f'a combined market margin of {round_CMM} can be achieved by: \n'
+                f'betting {bet_0}% on {team_0} with {agency_0} ({odds_0}), \n'
+                f'and {bet_1}% on {team_1} with {agency_1} ({odds_1}). \n'
+                f'This will yield a profit of {round(profit(100, CMM), 2)}%. \n'
+            )
+        elif len(arbitrage_object.teams) == 2 and len(arbitrage_object.odds) == 3:  # two teams, with a draw outcome
+            bet_2 = individualBet(100, arbitrage_object.odds['odds_2'], CMM)
+            agency_2 = arbitrage_object.agencies['agency_2']
+            odds_2 = arbitrage_object.odds['odds_2']
+
+            print(
+                f'For {arbitrage_object.game_id} ({arbitrage_object.sport}) \n'
+                f'a combined market margin of {round_CMM} can be achieved by: \n'
+                f'betting {bet_0}% on {team_0} with {agency_0} ({odds_0}),\n'
+                f'{bet_1}% on {team_1} with {agency_1} ({odds_1}), \n'
+                f'and {bet_2}% on a draw with {agency_2} ({odds_2}).'
+                f'This will yield a profit of {round(profit(100, CMM), 2)}%. \n'
+            )
 
 
 # Classes
