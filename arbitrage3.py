@@ -87,7 +87,7 @@ def printBestArbitrages():
                 f'a combined market margin of {round_CMM} can be achieved by: \n'
                 f'betting {bet_0}% on {team_0} with {agency_0} ({odds_0}),\n'
                 f'{bet_1}% on {team_1} with {agency_1} ({odds_1}), \n'
-                f'and {bet_2}% on a draw with {agency_2} ({odds_2}).'
+                f'and {bet_2}% on a draw with {agency_2} ({odds_2}).\n'
                 f'This will yield a profit of {round(profit(100, CMM), 2)}%. \n'
             )
 
@@ -170,7 +170,7 @@ def fillArbitrages():
         relevant_games = list(filter(lambda x: x.game_id == ID, games))
         # the best arbitrage opportunity will come from the greatest odds for each outcome
         best_games = {}
-        standard_odds_length = len(relevant_games[0].odds)
+        standard_odds_length = round((len(relevant_games[0].odds) + len(relevant_games[1].odds))/2)
         # Sometimes there seems to be a missing odds from one of the sites for a game, and I'm not about that life
         for game in relevant_games:
             if len(game.odds) != standard_odds_length:
