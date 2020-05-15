@@ -20,7 +20,7 @@ arbitrages = []
 
 # the combined market margin is the sum of the two implied probabilites.
 # if it's < 1, then there is an arbitrage opportunity
-def combinedMarketMargin(odds: tuple):
+def combinedMarketMargin(odds: tuple or list):
     """Returns a combined market margin, given a set of odds."""
     margin = 0
     for odd in odds:
