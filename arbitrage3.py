@@ -24,7 +24,7 @@ def combinedMarketMargin(odds: tuple):
     """Returns a combined market margin, given a set of odds."""
     margin = 0
     for odd in odds:
-        margin += 1/odd
+        margin += 1 / odd
     return margin
 
 
@@ -54,17 +54,16 @@ def printGames():
                 print(f'{game.teams["team_0"]} vs {game.teams["team_1"]} at {game.odds["odds_0"]} ' +
                       f'to {game.odds["odds_1"]} with {game.agency} ({game.sport}) \n')
 
-            elif len(game.teams) == 2 and len(game.odds) == 3:  # two teams with odds for a draw
-                print(f'{game.teams["team_0"]} vs {game.teams["team_1"]} at {game.odds["odds_0"]} to ' +
-                      f'{game.odds["odds_1"]} ({game.odds["odds_2"]} to draw) with {game.agency} ({game.sport}) \n')
+        elif len(game.teams) == 2 and len(game.odds) == 3:  # two teams with odds for a draw
+            print(f'{game.teams["team_0"]} vs {game.teams["team_1"]} at {game.odds["odds_0"]} to ' +
+                  f'{game.odds["odds_1"]} ({game.odds["odds_2"]} to draw) with {game.agency} ({game.sport}) \n')
 
 
 def printBestArbitrages():
-
     for arbitrage_object in arbitrages:
         CMM = combinedMarketMargin((odd for odd in arbitrage_object.odds.values()))
-        bet_0 = round(individualBet(100, arbitrage_object.odds['odds_0'], CMM), 2)
-        bet_1 = round(individualBet(100, arbitrage_object.odds['odds_1'], CMM), 2)
+        bet_0 = round(individualBet(100, 1/arbitrage_object.odds['odds_0'], CMM), 2)
+        bet_1 = round(individualBet(100, 1/arbitrage_object.odds['odds_1'], CMM), 2)
         team_0, team_1 = arbitrage_object.teams['team_0'], arbitrage_object.teams['team_1']
         agency_0, agency_1 = arbitrage_object.agencies['agency_0'], arbitrage_object.agencies['agency_0']
         odds_0, odds_1 = arbitrage_object.odds['odds_0'], arbitrage_object.odds['odds_1']
@@ -79,7 +78,7 @@ def printBestArbitrages():
                 f'This will yield a profit of {round(profit(100, CMM), 2)}%. \n'
             )
         elif len(arbitrage_object.teams) == 2 and len(arbitrage_object.odds) == 3:  # two teams, with a draw outcome
-            bet_2 = individualBet(100, arbitrage_object.odds['odds_2'], CMM)
+            bet_2 = round(individualBet(100, 1/arbitrage_object.odds['odds_2'], CMM), 2)
             agency_2 = arbitrage_object.agencies['agency_2']
             odds_2 = arbitrage_object.odds['odds_2']
 
@@ -183,21 +182,40 @@ def fillArbitrages():
 
         arbitrages.append(Arbitrage(teams, odds, agencies, sport))
 
-# def pickRegion():
-#     regions = input('Which regions would you like odds from? (uk, us, eu, au, all) ')
-#     all_regions = False
-#     if 'all' in regions:
-#         all_regions = True
-#     if 'uk' in regions or all_regions:
-#         fillGames(getOddsJson('uk'))
-#     if 'us' in regions or all_regions:
-#         fillGames(getOddsJson('us'))
-#     if 'eu' in regions or all_regions:
-#         fillGames(getOddsJson('eu'))
-#     if 'au' in regions or all_regions:
-#         fillGames(getOddsJson('au'))
-#
-#     fillArbitrages()
-#
-#     two_outcome_arbitrages.sort(key=lambda x: combinedMarketMargin(x.odds_a, x.odds_b))
-#     three_outcome_arbitrages.sort(key=lambda x: combinedMarketMargin(x.odds_a, x.odds_b, x.odds_draw))
+
+def pickRegion():
+    regions = input('Which regions would you like odds from? (uk, us, eu, au, all) ')
+    all_regions = False
+    if 'all' in regions:
+        all_regions = True
+    if 'uk' in regions or all_regions:
+        fillGames(getOddsJson('uk'))
+    if 'us' in regions or all_regions:
+        fillGames(getOddsJson('us'))
+    if 'eu' in regions or all_regions:
+        fillGames(getOddsJson('eu'))
+    if 'au' in regions or all_regions:
+        fillGames(getOddsJson('au'))
+
+    fillArbitrages()
+
+    arbitrages.sort(key=lambda x: combinedMarketMargin((odd for odd in x.odds.values())))
+
+
+pickRegion()
+
+# UI
+
+while True:
+    c = input('Games or Arbitrages? \n')
+
+    if 'games' in c.lower().strip() or 'g' in c.lower().strip():
+        printGames()
+    elif 'arbitrages' in c.lower().strip() or 'a' in c.lower().strip():
+        printBestArbitrages()
+    elif 'back' in c.lower().strip() or 'b' in c.lower().strip():
+        games, arbitrages = [], []
+        pickRegion()
+    else:
+        continue
+
