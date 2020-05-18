@@ -170,14 +170,10 @@ def fillArbitrages():
         relevant_games = list(filter(lambda x: x.game_id == ID, games))
         # the best arbitrage opportunity will come from the greatest odds for each outcome
         best_games = {}
-        standard_odds_length = round((len(relevant_games[0].odds) + len(relevant_games[1].odds))/2)
-        # Sometimes there seems to be a missing odds from one of the sites for a game, and I'm not about that life
-        for game in relevant_games:
-            if len(game.odds) != standard_odds_length:
-                print(f'removed {game.game_id} with {game.agency} because of irregular number of odds')
-                relevant_games.remove(game)
+
         for i in range(len(relevant_games[0].odds)):  # for each outcome, find the game object with the highest odds
-            game_i = max(relevant_games, key=lambda x: x.odds[f'odds_{i}'])
+            # This filter gets avoids errors caused by some sites not including draw odds
+            game_i = max(filter(lambda x: f'odds_{i}' in x.odds, relevant_games), key=lambda x: x.odds[f'odds_{i}'])
             best_games.update({f'game_{i}': game_i})
 
         teams, sport = best_games['game_0'].teams, best_games['game_0'].sport
