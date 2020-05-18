@@ -50,9 +50,8 @@ def printGames():
 
     for game in games:
         if len(game.teams) == 2 and len(game.odds) == 2:  # two teams, no draw outcome
-            if len(game.odds) == 2:
-                print(f'{game.teams["team_0"]} vs {game.teams["team_1"]} at {game.odds["odds_0"]} ' +
-                      f'to {game.odds["odds_1"]} with {game.agency} ({game.sport}) \n')
+            print(f'{game.teams["team_0"]} vs {game.teams["team_1"]} at {game.odds["odds_0"]} ' +
+                  f'to {game.odds["odds_1"]} with {game.agency} ({game.sport}) \n')
 
         elif len(game.teams) == 2 and len(game.odds) == 3:  # two teams with odds for a draw
             print(f'{game.teams["team_0"]} vs {game.teams["team_1"]} at {game.odds["odds_0"]} to ' +
