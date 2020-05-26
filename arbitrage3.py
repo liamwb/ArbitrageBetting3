@@ -143,17 +143,18 @@ def getOddsJson(region: str):
         sys.exit()
     else:
         print(f'Got odds for {region} successfully')
-    return odds_json
+    return odds_json, region
 
 
-def fillGames(odds_json):
+def fillGames(get_odds_json_output):
     """Fills the games arrays with the data from odds_json"""
+    odds_json, region = get_odds_json_output
     # put the data into the appropriate odds
     for game in odds_json['data']:
         sport = game['sport_nice']
         teams = {f'team_{i}': t for i, t, in enumerate(game['teams'])}  # formatting for 'team_n': team_n
         for site in game['sites']:
-            betting_agency = site['site_nice']  # previous version used 'site_key', but the nice one is nicer
+            betting_agency = site['site_nice'] + f'({region})'
             # the odds are stored in site['odds']['h2h']
             odds = {f'odds_{i}': o for i, o in enumerate(site['odds']['h2h'])}
             games.append(Game(betting_agency, teams, odds, sport))
