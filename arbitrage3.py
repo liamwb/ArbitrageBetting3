@@ -98,7 +98,7 @@ class Game:
      A Game object contains information about a single game from a single betting agency
 
      teams and odds should be in the format team_0, team_1, team_2, team_3, etc.
-     odds_1 is either the odds of team_2 winning, or the odds of a draw if there is no such team
+     odds_2 is either the odds of team_2 winning, or the odds of a draw if there is no such team
     """
 
     def __init__(self, agency: str, teams: dict, odds: dict, sport: str):
