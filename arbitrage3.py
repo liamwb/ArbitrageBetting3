@@ -72,8 +72,8 @@ def printBestArbitrages():
             print(
                 f'For {arbitrage_object.game_id} ({arbitrage_object.sport}) \n'
                 f'a combined market margin of {round_CMM} can be achieved by: \n'
-                f'betting {bet_0}% on {team_0} with {agency_0} ({odds_0}), \n'
-                f'and {bet_1}% on {team_1} with {agency_1} ({odds_1}). \n'
+                f'betting {bet_0}% on {team_0} with {agency_0} (at {odds_0}), \n'
+                f'and {bet_1}% on {team_1} with {agency_1} (at {odds_1}). \n'
                 f'This will yield a profit of {round(profit(100, CMM), 2)}%. \n'
             )
         elif len(arbitrage_object.teams) == 2 and len(arbitrage_object.odds) == 3:  # two teams, with a draw outcome
@@ -84,9 +84,9 @@ def printBestArbitrages():
             print(
                 f'For {arbitrage_object.game_id} ({arbitrage_object.sport}) \n'
                 f'a combined market margin of {round_CMM} can be achieved by: \n'
-                f'betting {bet_0}% on {team_0} with {agency_0} ({odds_0}),\n'
-                f'{bet_1}% on {team_1} with {agency_1} ({odds_1}), \n'
-                f'and {bet_2}% on a draw with {agency_2} ({odds_2}).\n'
+                f'betting {bet_0}% on {team_0} with {agency_0} (at {odds_0}),\n'
+                f'{bet_1}% on {team_1} with {agency_1} (at {odds_1}), \n'
+                f'and {bet_2}% on a draw with {agency_2} (at {odds_2}).\n'
                 f'This will yield a profit of {round(profit(100, CMM), 2)}%. \n'
             )
 
