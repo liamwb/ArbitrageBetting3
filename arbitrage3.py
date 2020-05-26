@@ -3,9 +3,9 @@ ArbitrageBetting3, by Liam Wood-Baker, 2020
 A third version of my arbitrage betting program, this time taking into account both two and three outcome games.
 """
 
-import json
-import sys
-import requests
+from json import loads as json_loads
+from sys import exit
+from requests import get as requests_get
 
 # Keep the key for the-odds-api key secret
 with open('api_key.txt') as f:
@@ -130,17 +130,17 @@ def getOddsJson(region: str):
     """Gets all the odds available from region"""
     # Get the odds for each event in each sport for each agency. 'Sport' being set to 'upcoming' means that the odds
     # for all upcoming games will be returned
-    odds_response = requests.get('https://api.the-odds-api.com/v3/odds', params={
+    odds_response = requests_get('https://api.the-odds-api.com/v3/odds', params={
         'api_key': api_key,
         'sport': 'upcoming',
         'region': region,  # uk | us | eu | au
         'mkt': 'h2h'  # h2h | spreads | totals
     })
-    odds_json = json.loads(odds_response.text)
+    odds_json = json_loads(odds_response.text)
 
     if not odds_json['success']:
         print(f'There was a problem getting the odds for {region}')
-        sys.exit()
+        exit()
     else:
         print(f'Got odds for {region} successfully')
     return odds_json, region
