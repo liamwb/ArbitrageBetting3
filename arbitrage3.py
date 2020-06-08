@@ -159,6 +159,7 @@ def fillGames(get_odds_json_output):
             odds = {f'odds_{i}': o for i, o in enumerate(site['odds']['h2h'])}
             games.append(Game(betting_agency, teams, odds, sport))
     # games is now full of games
+    print(f'Got {len(games)} sets of odds')
 
 
 def fillArbitrages():
